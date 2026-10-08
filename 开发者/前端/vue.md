@@ -3,6 +3,12 @@
 <a href="#load">渲染</a><br>
 <a href="#input">表单双向输入绑定</a><br>
 <a href="#listen">侦听器</a><br>
+<a href="#GetDOM">获得DOM元素</a><br>
+<a href="#DOMHook">DOM钩子</a><br>
+<a href="#props">Props & emit 组件通信</a><br>
+<a href="#slot">slot</a><br>
+<a href="#async">异步</a><br>
+
 
 
 异步
@@ -112,9 +118,9 @@ const bookNum = computed(  ()=>{
 
 ```
 <p> {{ count }} </p>
-<button @click="myfunc(count)"> Add </button>
+<button @click="myfunc(arg1,arg2...)"> Add </button>
 ------------------------------
-function myfunc(event,data){
+function myfunc($event,arg1,arg2...){
     console.log(data)
 }
 ```
@@ -135,6 +141,15 @@ e.g.
 ```
 <a @click.once="DoThis"> Do </a>
 ```
+
+
+
+
+
+
+
+
+
 </div>
 <br><br><br><br><br>
 
@@ -240,32 +255,166 @@ v-model双向数据绑定
 </script>
 ```
 
+</div>
+<br><br><br><br><br><br>
+
+<div id="GetDOM">
+<h2>获得DOM元素</h2>
+
+需要目标DOM元素有ref属性
+
+```
+<TagName ref="RefName">...</TagName>
+```
+
+使用useTemplate获得Element
+```
+import {useTemplateRef,onMounted} from 'vue'
+
+const a = useTemplateRef('RefName') 
+```
+</div>
+
+<br><br><br><br><br><br>
+<div id="DOMHook">
+<h2>DOM钩子</h2>
+
+- beforeCreate &emsp;组件创建前
+- created&emsp;组件创建后
+- beforeMount&emsp;DOM被渲染之前
+- Mounted&emsp;DOM渲染完成后
+
+组件被挂载了
+
+- beforeUpdated &emsp;数据发生变化前
+- updated&emsp;数据发生变化后
+
+组件被取消挂载
+
+- beforeUnmounted
+- unmounted
+
+```
+onMounted(()=>{
+    ...
+})
+```
+
+>[!WARNING] Vue3的setup模式中，没有beforeCreate created
+>如果需要，需退回到Vue2的写法：setup()函数
+
+</div>
+<br><br><br><br><br><br>
+
+<div id=props>
+<h2>Props & emit 组件通信</h2>
+<h3>父组件传子组件</h3>
+<strong>父组件传子组件</strong>
+
+- `<ChildComp :keyName="val" />`
+把val传给ChildComp组件，用keyName作为键
+
+<strong>子组件接收</strong>
+
+- ` const props = defineProps(['keyName'])`
+  props.key就是val
+
+- `defineProps(['keyName'])`
+ keyName直接当值为val的变量用
 
 
 
 
+<h3>子组件传父组件</h3>
+
+```
+# 子组件内
+const emit = defineEmits(["自定义事件名称"])  # 声明emit可以往外冒哪些自定义事件
+function functionName(){
+    emit("自定义事件名称",传给父组件的参数)
+}
+
+# 父组件内
+<ChildComp @自定义事件名称="functionName" />
+function functionName(参数){
+    ...
+}
 
 
+emit负责往外冒泡，父组件的<ChildComp @自定义事件名称="functionName" />会监听emit
+当子组件的emit被触发时,父组件根据emit里的"自定义事件名称"参数判断，触发functionName函数
+```
 
 
+<h3>兄弟组件互传</h3>
+通过父组件作为桥梁
+
+- 父组件中
+
+```
+const fatherVar
+provide("key",fatherVar)    先注入
+```
+
+- 两个兄弟组件中
+
+&emsp;&emsp;&emsp;通过key拿到 `const receive = inject("key")` 
+
+如此两个兄弟组件内都拿到了同一个变量
+
+>[!WARNING] 父子通信
+>通过Props实现：父子必须是紧邻关系<br>
+>通过provide,inject则无限制，只要是后代都行
+</div>
+<br><br><br><br><br><br>
+
+
+<div id="slot">
+<h2>slot</h2>
+
+定义插槽组件SlotComp
+```
+<div>
+    <slot name='s1'> </slot> 
+</div>
+```
+
+使用插槽
+
+```
+<SlotComp>
+    <template #s1>
+        插入的内容
+    </template>
+</SlotComp>
+```
 
 </div>
 <br><br><br><br><br><br>
 
 
+<div id="async">
+<h2>异步</h2>
+
+惰性加载组件
+
+```
+const AsyncComp = defineAsyncComponent({
+    loader:()=> import('组件路径'),  异步加载的组件
+    delay: 100                      加载组件前的延时时间(ms)
+    loadinfComonent:组件名,          加载中时展示的组件
+    errorComponent:组件名,           加载失败时展示的组件
+})
+```
+AsyncComp是组件 `<AsyncComp />`使用
+
+- 如果需求没那么严格可以直接 `defineAsyncComponent(()=>import('组件路径'))`
 
 
 
+</div>
 
-
-
-
-
-
-
-
-
-
+<br><br><br><br><br><br>
 
 
 

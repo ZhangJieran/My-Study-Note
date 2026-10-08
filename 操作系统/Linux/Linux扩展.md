@@ -2,6 +2,14 @@
 &emsp;<a href="#OpenSSH">开启SSH服务</a>  <br>
 &emsp;<a href="#Desktop">远程桌面</a>  <br>
 &emsp;<a href="#Desktop">云服务的root权限</a>  <br>
+&emsp;<a href="#file">文件互传</a>  <br>
+&emsp;<a href="#live">客户端连接保活</a>  <br>
+
+
+
+
+
+
 
 
 <br><br><br><br><br><br>
@@ -55,7 +63,7 @@ ssh 用户名@linux的ip地址
 >解决方案：ssh-keygen -R linux_ip
 >```
 
-
+</div>
 <br><br><br><br><br><br><br>
 
 
@@ -139,11 +147,22 @@ sudo passwd root
 </div>
 <br><br><br><br><br><br>
 
+<div id="live">
+
+<h2>客户端连接保活</h2>
+解决一段时间不操作ssh连接自动断开
 
 
+```
+编辑本机 SSH 配置 ~/.ssh/config（Windows 下是 C:\Users\34563\.ssh\config）：
 
 
+Host *
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+含义：每 60 秒发一次心跳，连续 3 次没响应才断开。这样空闲时连接不会断。
 
 
-
-
+```
+</div>
+<br><br><br><br><br><br>

@@ -6,8 +6,10 @@
 <a href="#tools">工具调用</a><br>
 <a href="#tools">langchain内置工具列表</a><br>
 <a href="#output">结构化输出</a><br>
+<br>
 <a href="#Agent">Agent</a><br>
 <a href="#middleware">中间件</a><br>
+<a href="#memory">记忆</a><br>
 
 
 
@@ -485,7 +487,7 @@ tool_choice = none(不调用工具) | auto(自行决定) | any(必须调用工�
 
 
 
-<h3>Pydantic && with_structured_output</h3>
+<h3>Pydantic</h3>
 
 ```
 class MyEnum(int,Enum):
@@ -504,16 +506,35 @@ class Person(BaseModel):
 # 可以采用这种嵌套的结构
 class PersonList(BaseModel):
     person : list[Person]
+```
 
-model1 = model.with_structured_output(Person)
+<strong>更多Field字段</strong><br>
+
+```
+Field(
+    description 描述
+    min_length  最小长度
+    max_length  最大长度
+    el = 小于等于xxx
+    ...
+)
+```
+
+>[!NOTE] 尽量少嵌套
+>模型能力有限，一般最多嵌套三层
+
+<br>
+<br>
+<h3>Model结构化输出</h3>
+<strong>with_structured_output()</strong>
+
+```
 model2 = model.with_structured_output(PersonList)
-
-model1.invoke(...)  返回 Person 实例
 model2.invoke(...)  返回 PersonList 实例
 ```
->[!WARNING] 尽量少嵌套
->模型能力有限，一般最多嵌套三层
-<br>
+
+
+
 
 <strong>开启include_raw 拿到AIMessage</strong>
 
@@ -526,14 +547,32 @@ method="provider"开启模型原生约束解码能力
 
 
 <br>
-<strong>更多Field字段</strong><br>
-Field(
-    description 描述
-    min_length  最小长度
-    max_length  最大长度
-    el = 小于等于xxx
+
+
+
+<h3>Agent结构化输出</h3>
+
+```
+class MyClass(BaseModel):
+    # 使用Pydantic定义结构化输出
     ...
+
+agent = create_agent(
+    ...
+    response_format = ProviderStrategy( schema=MyClass ) 
+                     /ToolStrategy( schema=MyClass )   
 )
+```
+>[!TIP]优先使用ProviderStrategy，如果有些模型不支持，再用ToolStrategy
+>ProviderStrategy 模型原生结构化输出能力，约束解码<br>
+>ToolStrategy 伪装成虚拟工具，本质不是用模型的结构化输出能力
+
+
+>[!WARNING] Agent和Model结构化输出的区别
+>with_strutured_output 每次都是结构化输出<br>
+>response_format 只在Agent循环最后一次结构化输出，中间推理不受影响
+
+
 
 </div>
 <br><br><br><br><br><br><br><br>
@@ -561,31 +600,6 @@ agent.invoke({
 })
 ```
 返回字典 { "messages" : [BaseMessage], "Structured_response" : 结构化输出实例    }<br><br>
-
-<h3>结构化输出</h3>
-
-```
-class MyClass(BaseModel):
-    # 使用Pydantic定义结构化输出
-    ...
-
-agent = create_agent(
-    ...
-    response_format = ProviderStrategy( schema=MyClass ) 
-                     /ToolStrategy( schema=MyClass )   
-)
-```
->[!TIP]优先使用ProviderStrategy，如果有些模型不支持，再用ToolStrategy
->ProviderStrategy 模型原生结构化输出能力，约束解码<br>
->ToolStrategy 伪装成虚拟工具，本质不是用模型的结构化输出能力
-
->[!WARNING] 和with_strutured_output的区别
->with_strutured_output 每次都是结构化输出<br>
->response_format 只在Agent循环最后一次结构化输出，中间推理不受影响
-
-
-
-
 
 <h3>错误处理</h3>
 
@@ -652,25 +666,38 @@ agent = create_agent(
 
 自定义钩子的两种写法
 
+
+
 ```
 class MyMiddleware(AgentMiddleware):
 
-    def before_agent(self,state:AgentState,runtime:Runtime)->None:
+    def before_agent(self,state:AgentState,runtime:Runtime):
         # AgentState 是当前会话状态对象
         # 基本上用state["messages"] 最多。包含所有消息list[BaseMessage]
         # runtime 暂时先pass
         
+    def before_model(...):
+        pass
 
-    def before_model(...)->None:
+    def after_model(...):
+        pass
+    def after_agent(...):
+        pass
 
-    def wrap_tool_call(...)->None:
 
-    def wrap_model_call(...)->None:
+    # 发起LLM请求前
+    def wrap_model_call(request,handler):
+        # 只有调用这个，才会真正请求给模型发送请求
+        # request 是请求信息
+        # 可以用来短路调用模型，修改请求信息，修改返回信息等
+        
+        res = handler(request)     # 这一步发送请求，返回模型响应信息
+        return res                 # 返回值加入到state["messages"]里
 
-    def after_model(...):->None
 
-    def after_agent(...)->None:
-
+    # 调用工具前
+    def wrap_tool_call(request,handler):
+        #和wrap_model_call类型
 ```
 agent 是每次调用agent前后执行，可以理解成整个invoke<br>
 model 是每次调用LLM模型请求前后执行，一个invoke里可能执行好几次model
@@ -692,13 +719,25 @@ def MyMiddleware(state,runtime):
 >[!CAUTION] AgentState
 >state参数是一个thread_id全局共用的，如果只想在局部修改需要拷贝一下
 
->[!TIP] 装饰器参数can_jump_to
+>[!TIP] 装饰器参数can_jump_to = ["end","tools","model"]
 >直接跳转到某个流程节点<br>
->end 跳转到第一个after_agent钩子
->tools 跳转至工具节点
->model 跳转至模型节点或第一个before_model钩子
+>end 跳转到第一个after_agent钩子<br>
+>tools 跳转至工具节点<br>
+>model 跳转至模型节点或第一个before_model钩子<br>
 >
->
+>```
+>@before_agent(can_jump_to=["end"])
+>def MiddlewareFunc():
+>   ...
+>   if ... :
+>       retunrn {
+>           "messages" : [                 
+>                AIMessage("...")
+>            ],
+>           "message_override" = False,          # 追加到消息列表，True是替换
+>           "jump_to":"end"    
+>}
+>```
 
 
 <br>
@@ -923,8 +962,154 @@ FilesystemFileSearchMiddleware(
 <br><br><br><br><br><br><br><br>
 
 
+<div id="memory">
+<h2>记忆</h2>
+<h3>短期记忆</h3>
+State 历史消息列表
+Chekpointer 某个时刻state快照
+Thread ID State的唯一标识<br><br>
+<strong>基于内存存储的记忆</strong>
+
+```
+checkpointer = InMemorySaver()  创建一个内存级别的记忆存储
+
+config = {
+    "configurable":{
+        "thread_id" : "1"
+    }
+}
+
+agent = create_agent(
+        ...
+        checkpointer = checkpointer
+    )
+
+agent.invoke({
+    "messages":[...],
+    config = config       
+})
+```
+
+```
+agent.get_state(config)  获得这个state的信息
+```
+<strong>基于PostgresSQL存储的记忆</strong>
+
+```
+from langgraph.checkpoint.postgres import PostgresSaver
+
+DB_URL = "postgresql://用户名:密码@IP地址:5432/数据库名?sslmode=disable"
+
+with PostgresSaver.from_conn_string(DB_URL) as checkpointer:
+    #初始化数据库
+    checkpointer.setup()
+
+    agent = create_agent(
+        ...
+        checkpointer = checkpointer
+    )
+
+    ...
+```
+
+>[!TIP] agent被限制在with块内。解决办法：
+>不是工程标准办法，只是个人的经验补丁
+>
+>```
+># 外部定义变量，利用yield特性防止代码跳出with块
+>agent = None
+>
+>def func():
+>   global agent # 声明agent
+>   
+>with PostgresSaver.from_conn_string(DB_URL) as checkpointer:
+>       checkpointer.setup()
+>
+>       agent = create_agent(
+>           ...
+>            checkpointer = checkpointer
+>       )
+>       yield    # 使函数卡在这里，避免离开with块
+>
+># 加载函数  
+>g = func()
+>next(g) 
+>```
 
 
+
+>[!IMPORTANT] 基于数据库和内存存储记忆的区别
+>基于内存: 程序进程结束，记忆就消失了，下一次运行不会记得上一次的运行时的记忆<br>
+>基于数据库: 记忆不会随程序进程结束而消失
+
+
+
+<br>
+<h3>长期记忆</h3>
+
+创建embeding模型
+
+```
+embedding_model = init_embeddings( model , api_key , base_url )
+```
+
+
+```
+IndexConfig = {
+    "embed":func,              # 自定义embed函数,或者传embeding模型
+    "dims":6,                  # 向量维度
+    "fields":["$","key"]       # 把value里的哪个key做向量化？$表示整个value
+}
+```
+
+<strong>基于内存存储的记忆</strong>
+
+```
+#这里填 IndexConfig
+store = InMemoryStore(index:IndexConfig = None)   
+
+store.put(
+    namespace : tuple,
+    key       : str,
+    value     : dict[str,any],
+    index     : bool           # index=True 生成向量，开启语义化检索
+) 
+
+store.get(namespace,key)  返回Item对象
+store.search(
+    namespace_prefix:tuple,   # namespace路径
+    filter:dict[str:any]|None # 过滤条件,返回带filter的Item
+    query:str|None,           # 基于语义查询
+    limit:int,                # 最多取limit条数据
+    offset:int,               # 取之前跳过offset条数据
+)
+
+store.delete(namespace,key)
+```
+<br>
+<br>
+<strong>基于PostgresSQL存储的记忆</strong><nr>
+
+```
+from langgraph.checkpoint.postgres import PostgresStore
+
+DB_URL = "postgresql://用户名:密码@IP地址:5432/数据库名?sslmode=disable"
+
+with PostgresStore.from_conn_string(DB_URL , index:IndexConfig) as store:
+    #初始化数据库
+    store.setup()
+    store.put(...)
+
+    ...
+```
+
+>[!CAUTION] 在创建store时写了IndexConfig
+>调用store.put()<br>
+>put 的 index字段默认值为True
+
+
+</div><br>
+<br><br><br><br><br><br><br><br>
 
 
 

@@ -421,19 +421,19 @@ DOM2级事件
 <h3>鼠标事件</h3>
 
 ```
-onclick           单击              
-ondbclick         双击            
-onmousedown       按下鼠标      
-onmouseup         释放鼠标      
-onmousemove       鼠标在节点内部移动 
+click           单击              
+dbclick         双击            
+mousedown       按下鼠标      
+mouseup         释放鼠标      
+mousemove       鼠标在节点内部移动 
 
-onmouseenter      鼠标进入一个节点触发 
-onmouseleave      鼠标离开某个节点触发 
+mouseenter      鼠标进入一个节点触发 
+mouseleave      鼠标离开某个节点触发 
 
-onmouseover       进入节点及其子节点触发      
-onmouseout        离开节点及其父节点触发       
+mouseover       进入节点及其子节点触发      
+mouseout        离开节点及其父节点触发       
 
-onwheel           鼠标滚轮触发               
+wheel           鼠标滚轮触发               
 ```
 
 示例
@@ -453,7 +453,7 @@ Element.onclick = function(){
 <h3>事件对象</h3>
 
 ```
-Elemnt.onclick() = function(data,$event){
+Elemnt.onclick() = function($event,data1,data2...){
                         ...
                     }
 ```
@@ -481,10 +481,9 @@ event.stopPropagation()    阻止事件冒泡（触发定义在别的节点上�
 <h3>键盘事件</h3>
 
 ```
-onkeydown   按下触发
-onkeyup     松开触发
-
-onkeypress  无值键不触发，有值键先触发onkeydown再触发onkeypress
+keydown   按下触发
+keyup     松开触发
+keypress  无值键不触发，有值键先触发onkeydown再触发onkeypress
 ```
 </div><br>
 
@@ -495,13 +494,13 @@ onkeypress  无值键不触发，有值键先触发onkeydown再触发onkeypress
 <h3>表单事件</h3>
 
 ```
-oninput     表单内输入内容时触发(连续触发)
-onchange    表单内输入内容触发(非连续触发)只有按下回车或失去焦点才触发
+input     表单内输入内容时触发(连续触发)
+change    表单内输入内容触发(非连续触发)只有按下回车或失去焦点才触发
 
 reset       清空表单
-onsubmit    向服务器提交数据
+submit    向服务器提交数据
 
-onselect    选中输入框里的内容时触发
+select    选中输入框里的内容时触发
 ```
 
 
