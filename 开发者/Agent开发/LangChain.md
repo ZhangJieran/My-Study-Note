@@ -23,14 +23,14 @@
 <h3>设置环境变量</h3>
 加载环境变量
 
-``` 
+``` py
 from dotenv import load_dotenv
 load_dotenv("py风格的文件路径（用.）")
 ```
 这个函数是用来读取项目里的.env文件，把里面的键值对加载到当前Python进程的环境变量os.environ。如果找不到文件返回False。
 
 
-``` 
+``` py
 os.getenv("键")
 ```
 该函数用于读取.os.environ里的变量
@@ -47,9 +47,14 @@ os.getenv("键")
 子类    ChatOpenAI  ChatDeepSeek  ChatOpenRouter ......    ---调用---> RunnableBinding
 ```
 =============================================================================<br><br>
-<strong>使用子类创建模型实例 ( 以ChatOpenAI为例 )</strong>
 
-```
+
+<details>
+<summary><strong>使用子类创建模型实例 ( 以ChatOpenAI为例 )</strong></summary>
+
+---
+
+```py
 ChatOpenAI(
     model    = "deepseek-v4",             # 具体的模型
     base_url = "https://deepseek.com"     # 大模型供应商API请求地址
@@ -60,12 +65,19 @@ ChatOpenAI(
 ChatOpenAI() 可以兼容很多模型，比如deepseek也可以用ChatOpenAI创建<br>
 ChatDeekSeek() 专用于创建deepseek模型<br>
 ChatOpenRouter() 是为OpenRouter设计的，这是一个第三方模型代理的网站,里面集成了很多模型<br>
+</details>
+
+---
 <br>
-<strong>用工厂函数创建模型实例</strong>
+
+<details>
+<summary><strong>用工厂函数创建模型实例( init_chat_model )</strong></summary>
+
+---
 <br>
 init_chat_model()是统一的工厂函数,返回BaseChatModel
 
-``` 
+``` py
 init_chat_model(
     model_provider  = "deepseek",                    # 模型供应商名称
     model           = "deepseek-v4",                 # 具体的模型
@@ -102,6 +114,9 @@ init_chat_model(
 >)
 >```
 
+---
+
+</details>
 
 </div>
 <br><br><br><br><br><br><br><br>
@@ -132,7 +147,7 @@ ToolMessage&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;{"role" : "tool".....
 <strong>创建消息对象列表</strong><br>
 可以使用消息类，也可以用字典格式，也可以混用
 
-``` 
+``` py
 message = [
     {"role":"system","content":"你是一个ai助手"}，
     HumanMessage( content="你好，介绍一下你" ),
@@ -141,9 +156,13 @@ message = [
 ```
 多轮对话添加记忆，一般往message里添加AIMessage。 AIMessage.content是模型输出的回答
 
-<strong>HumanMessage</strong><br>
+<details>
+<summary><strong>HumanMessage</strong></summary>
+<br>
 
-```
+---
+
+```py
 HumanMessage(
     content =  "你好",
     name    =  "Tom",
@@ -153,7 +172,14 @@ HumanMessage(
 id全局唯一，name不唯一<br>
 有些字段不同的模型厂商支持情况不一样,不支持时，返回的AIMessage里对应字段输出unknown<br>
 
-<strong>AIMessage</strong><br>
+---
+
+</details><br>
+
+<details>
+<summary><strong>AIMessage</strong></summary>
+
+---
 
 ```
 AIMessage_ins.content       # AI的回答
@@ -167,22 +193,42 @@ AIMessage_ins.tool_calls    # list[ ToolCall ]
 >   args : dict
 >   id   : Option[str]
 >```
-<strong>ToolMessage</strong><br>
 
-```
+---
+
+</details><br>
+
+<details>
+<summary><strong>ToolMessage</strong></summary>
+
+---
+
+```py
 ToolMessage(
     content      = "<工具函数执行返回值>",
     name         = "getWeather",
     tool_call_id = "call_00_nUD2NCJQ4s"
 )
 ```
+---
 
-<strong>content</strong><br>
+</details><br>
+
+
+<details>
+<summary><strong>content 和 content_block</strong></summary>
+
+---
+
+>[!TIP] 推荐使用content_block
+
+
+### content
 content是发给模型的信息，可以直接是一个字符串，也可以是一个列表
 <br><br>
 e.g.给多模态模型发消息
 
-```
+```py
 msg = [HumanMessage(
     content = [
         {
@@ -197,13 +243,14 @@ msg = [HumanMessage(
 )] 
 ```
 <a href="./base64_image.py">encode_image() 见 base64_image.py </a>
-<br>
+<br><br>
 
-<strong>content_blocks</strong><br>
+### content_blocks
 不同厂商多模态调用/输出api不一样，为了统一，就有了content_blocks
 <br>
 输入：
-```
+
+```py
 msg = [HumanMessage(
     content_blocks = [
         {
@@ -222,12 +269,14 @@ msg = [HumanMessage(
 <br>
 输出：
 
-```
+```py
 response = model.invoke(msg)
 print(response.content_blocks)
 ```
 
+---
 
+</details>
 </div>
 <br><br><br><br><br><br><br><br>
 

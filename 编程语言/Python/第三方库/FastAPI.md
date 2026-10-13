@@ -1,19 +1,28 @@
+<a href="#install">安装fastapi</a><br>
+<a href="#use">使用</a><br>
+
+<a href="#CORS">CORS</a><br>
+<br><br><br><br><br><br><br><br>
 
 
 
 
+<div id="install">
 
-
-
-
-
-
-#### 安装fastapi 
+## 安装fastapi 
 
 `pip install "fastapi[standard]" `uvicorn也一起安装了<br>
+</div>
+<br><br><br><br><br><br><br><br>
 
+<div id="use">
 
-```
+## 使用
+
+<details>
+<summary><strong>示例</strong></summary>
+
+```py
 from fastapi import FastAPI
 
 app = FastAPI()
@@ -26,11 +35,9 @@ def myFunc(arg1,arg2):
 ```
 
 
-
 手动指定
 
-```
-
+```py
 app.get("/路径")
 def myFunc():
     # 手动定义响应头
@@ -41,7 +48,7 @@ def myFunc():
     }
 
     returnJson = {
-        ...略，这是返回的json
+        ...略，定义返回的json
     }
     # 手动指定状态码、响应头、内容
     return JSONResponse(
@@ -51,8 +58,7 @@ def myFunc():
     )
 
 ```
-
-
+</details>
 <br>
 
 #### 启动API
@@ -61,9 +67,37 @@ def myFunc():
 reload的意思是代码被修改就自动重启api<br>
 host是监听IP,port是端口号
 - <strong>代码里写</strong>&emsp;`uvicorn.run(app, host="0.0.0.0", port=8000)`
+</div>
+<br><br><br><br><br><br><br><br>
 
 
 
 
 
 
+
+
+<div id="CORS">
+
+## CORS
+
+<details>
+<summary><strong>示例</strong></summary>
+
+```py
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins = ["https://..."],  # 允许的跨源请求
+    allow_methods = ["GET","POST"],   # 允许的方法
+    allow_headers = ["*"]             # 允许的请求头(*是所有的意思)
+)
+```
+
+</details>
+
+</div>
+<br><br><br><br><br><br><br><br>

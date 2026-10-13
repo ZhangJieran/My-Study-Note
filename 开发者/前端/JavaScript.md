@@ -1,4 +1,5 @@
-<a href="#StringMethod">字符串方法</a><br>
+<a href="#StringMethod">字符串方法</a>&emsp;
+<a href="#templatestr">模板字符串</a><br>
 <a href="#ArrayMethod">数组方法</a><br>
 <a href="#obj">对象object</a><br>
 <a href="#Math">Math对象</a><br>
@@ -20,8 +21,35 @@
 <a href="#formEvent">表单事件</a><br>
 
 
+<br><br><br><br><br>
 
-<br>
+```js
+在需要导出的变量定义时写export
+
+export const a = ()=>{
+    ...
+}
+
+解构语法
+const {a,b,c} = [100,10,1]
+const {a,...rest} = [100,10,1] rest就是[10,1]
+...也可用于展开,如:  ...[100,10,1]
+
+对象结构和位置没关系
+
+接收的变量名要和键一样
+
+利用解构复制obj但修改特定字段
+{
+    ...obj,
+    obj里的字段:新值
+
+}
+```
+
+<br><br><br><br>
+
+
 <div>
 
 ```
@@ -35,7 +63,7 @@ document.write("输出到浏览器页面")
 </div>
 <br>
 
-<div id="STringMethod">
+<div id="StringMethod">
 <h3>字符串方法属性</h3>
 
 ```
@@ -59,39 +87,64 @@ str.substring( start,end )
 取子串，end不写默到结尾。<br>
 如果参数为负数，把负数变成0;如果start>end交换参数位置
 
-```
+```js
 str.substr( start,length )         
 ```
 取子串
 
-```
+```js
 str.indexOf( Other,n )             
 ```
 从n开始查找，返回Other在str里第一次出现的下标，找不到返回-1
 
-```
+```js
 str.trim()                         
 ```
 返回去除两端 空格 \n \t \v \r 的字符串
 
-```
+```js
 trimEnd() trimStart()          
 ```
 只去除一端
 
-```
+```js
 str.split(str,len)                     
 ```
 按给定的 str 分割字符串,返回分割的数组,split参数可以是空字符串""。len为可选，返回的限制数组里最多有len个元素
 <br>
 e.g. 
-```
+```js
 var str = "hello|world|hi";
 str.split('|');
 ```
  -> 返回['hello','world','hi']
 </div>
-<br>
+<br><br><br><br><br><br><br><br>
+
+
+<div id="templatestr">
+
+## 模板字符串
+
+```
+用反引号 ` 包裹，表明这是模板字符串
+${ js表达式 }
+```
+e.g.
+
+```js
+`年龄：${5+6}` 相当于 "年龄：11"
+```
+
+</div>
+
+
+
+
+
+<br><br><br><br><br><br><br><br>
+
+
 
 
 <div id="ArrayMethod">
@@ -100,41 +153,48 @@ str.split('|');
 ```
 arr.isArray()
 ```
-判断是否是数组，返回bool（用typeof判断数组返回的是object）
+判断是否是数组，返回bool（用typeof判断数组返回的是object）<br><br>
 
 ```
 arr.push( elem1,elem2... ) 
 arr.pop() 
 ```
-在数组末端添加元素，返回数组长度<br>
+在数组末端添加元素，返回数组长度<br><br>
 删除尾部元素，并返回被删除的元素
 
 ```
 arr.unshift( elem1,elem2... )
 arr.shift()
 ```
-数组头部添加元素<br>
+数组头部添加元素<br><br>
 删除头部元素
 
 ```
 arr.join( str )
 ```
-把数组里的所有元素用str连接，返回字符串<br>
+把数组里的所有元素用str连接，返回字符串<br><br>
 
 ```
 arr.concat( arr1,arr2... )
 ```
-合并数组返回新数组，原数组保持不变
+合并数组返回新数组，原数组保持不变<br><br>
 
 ```
 arr.reverse()
 ```
-数组翻转(会改变原数组)
+数组翻转(会改变原数组)<br><br>
 
 ```
 arr.indexOf( val，index )
 ```
 从下标index搜索(默认从0开始)，返回给定元素第一次出现的下标,不存在返回-1
+<br><br>
+
+```
+NewArr = arr.fliter( (item,index)=>{...} )
+```
+新建数组，遍历数组的每个元素,并拿去函数里做计算，如果返回true,就保留<br><br>
+
 </div>
 <br>
 <div id="obj">
@@ -365,9 +425,9 @@ Element.style.cssText = "width:100px;"+
 ```
 
 </div>
-<br>
+<br><br><br><br><br><br><br><br>
 <div id="event">
-<h3>事件</h3>
+<h2>事件</h2>
 HTML事件<br>
 缺点：HTML和JS代码混在一起
 
@@ -444,7 +504,8 @@ Element.onclick = function(){
 ```
 
 
-</div><br>
+</div>
+<br>
 
 
 
@@ -452,14 +513,6 @@ Element.onclick = function(){
 <div id="EventObj">
 <h3>事件对象</h3>
 
-```
-Elemnt.onclick() = function($event,data1,data2...){
-                        ...
-                    }
-```
-event参数就是事件对象<br>
-data是传递的参数
-<br><br>
 <strong>属性</strong><br>
 
 ```
