@@ -1,5 +1,7 @@
 `uv init` 初始化，自动生成pyproject.toml
 
+`uv venv` 创建虚拟环境
+
 `uv add 库名` 安装库
 
 `uv remove 库名` 删除库

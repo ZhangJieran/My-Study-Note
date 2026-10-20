@@ -4,6 +4,7 @@
 &emsp;<a href="#Desktop">云服务的root权限</a>  <br>
 &emsp;<a href="#file">文件互传</a>  <br>
 &emsp;<a href="#live">客户端连接保活</a>  <br>
+&emsp;<a href="#systemd">systemd</a>  <br>
 
 
 
@@ -120,6 +121,7 @@ windows 访问
 <strong>windows向linux传文件</strong>
 
 ```
+scp windows文件路径 root@ip:linux路径
 ```
 
 <strong>linux向windows传文件</strong>
@@ -127,6 +129,10 @@ powershell 执行
 ```
 scp ubuntu@linux_ip :Linux文件路径 windows文件路径
 ```
+
+<br>
+
+**如果时传文件夹需要加上+r**
 
 </div>
 
@@ -161,8 +167,99 @@ Host *
     ServerAliveInterval 60
     ServerAliveCountMax 3
 含义：每 60 秒发一次心跳，连续 3 次没响应才断开。这样空闲时连接不会断。
-
-
 ```
 </div>
 <br><br><br><br><br><br>
+
+
+<a id="systemd"></a>
+
+## systemd
+
+`pstree -p` 输出进程树
+
+
+存放units的文件路径
+
+```
+/etc/systemd/system/   # 自定义的放这里
+/lib/systemd/system
+/usr/lib/systemd/system
+```
+
+
+
+
+
+<br>
+<details>
+<summary><strong>systemctl指令</strong></summary>
+
+---
+
+|指令|作用
+|---|---
+|`systemctl start xxx.service` |启动服务
+|`systemctl status xxx.service`  |查看某个units的状态
+|`systemctl stop xxx.service`|  停止服务
+|`systemctl enable xxx.service`|开机自启动
+|`systemctl list-units`| 列出当前系统里的units
+|`systemctl list-unit-files`| 列出所有units文件
+|`systemctl cat xxx`| 查看xxx units文件内容以及文件路径
+|`systemctl edit xxx`| 编辑xxx units的配置文件，edit比vim更好
+
+---
+
+</details>
+
+
+<br>
+<details>
+<summary><strong>自定义unit</strong></summary>
+
+---
+
+**配置文件基本骨架**
+
+```
+[Unit]                                   
+Description=...
+
+[UnitType]
+
+[Install]                                 
+WantedBy=multi-user.target                
+```
+
+**service**
+
+```
+[Unit]
+Description=运行py程序
+
+[Service]
+ExecStart=python HelloWorld.py
+
+[Install]
+WantedBy=multi-user.target 
+```
+
+**timer**
+
+```
+[Unit]
+Description=运行py程序
+
+[Timer]                
+OnUnitActiveSec=1min             # 每隔1min执行      
+OnCalendar=*-*-* 08:00:00        # 每天 08:00执行
+Unit=HelloWorld.service
+
+[Install]
+WantedBy=multi-user.target 
+```
+
+
+---
+
+</details>

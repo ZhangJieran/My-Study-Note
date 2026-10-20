@@ -3,6 +3,12 @@
 <a href="#slice">slice</a><br>
 <a href="#map">map</a><br>
 <a href="#string">string</a><br>
+<a href="#assertType">类型断言</a><br>
+<a href="#gorutine">并发原语</a><br>
+<a href="#reflect">反射</a><br>
+<a href="#file">文件操作</a><br>
+
+
 <div id="defer">
 <h3>defer</h3>
 
@@ -131,6 +137,354 @@ e.g.
 
 “strings”包
 
-
-
 </div>
+
+<br><br><br><br><br><br>
+
+
+<a id="assertType"></a>
+
+## 类型断言
+
+<details>
+<summary><strong>展开</strong></summary> 
+
+---
+
+>[!WARNING] x.(type)
+>该语法仅在switch语句中生效
+>
+>```golang
+>switch x.(type) {
+>    case int:
+>        ...
+>    default :
+>        ...
+>}
+>```
+<br>
+
+`v,ok := a.(类型)` 类型断言
+
+```golang
+v,ok := a.int()
+```
+<br>
+一般空接口用得比较多
+
+```golang
+type Test struct {
+    number int
+}
+a := make(map[int]Test)
+a[0] = Test{number:1}
+// a[0].number  会报错，静态检查认为a[0]是any类型不具备number
+// 先断言，再使用
+a[0].(Test).numer
+```
+---
+
+</details>
+
+<br><br><br><br><br><br>
+
+<a id="gorutine"></a>
+
+## 并发原语
+
+
+<details>
+<summary><strong>gorutine</strong></summary>
+
+---
+
+```golang
+sync.WaitGroup：
+
+Add(n int) 计数器+n,n可以是负数
+Done()	把计数器减 1 （等价于 Add(-1)）
+Wait()	阻塞当前 goroutine，直到计数器归零
+// main结束不会等待其他rutine结束，使用Wait解决这一点
+```
+
+
+
+
+
+```golang
+// 创建协程计数器
+var Count sync.WaitGroup  
+
+// 定义协程
+func coroutine(){
+    ...
+    // 协程计数器-1
+    Count.Done() 
+}
+
+func main(){
+    // 协程计数器+1
+    Count.Add()
+    go coroutine()
+    ...
+    // 只有协程计数器=0时，主线程才会结束
+    Count.Wait()
+}
+```
+
+---
+
+</details>
+<br>
+
+<details>
+<summary><strong>MPG</strong></summary> 
+
+---
+
+```
+M是一个物理线程
+P维护一个装着G的队列
+G要执行的任务
+
+M必须要有P挂载才会执行，否则M就闲着，毕竟没有P,M拿不到G
+
+M1-P-G1-G2 , M2   Gorutine ：
+最开始P绑定在M1上执行G1,此时G1发生系统调用需要等待
+此时P就会换绑到M2上，由M2执行G2。等待G1被唤醒，那么G1会重新进入P的队列。
+
+注意G不会和P绑定：
+比如G1原本在P1里，某时G1系统调用，脱离了P1，等G1被唤醒后它可能进入P2的队列
+
+可能会有疑问：虽然P跑到M2去了但M1在等G1,这么看不还是M1被闲置了？
+实际上M1确实被闲置了，但M1闲置≠CPU闲置，操作系统会把这个M1线程挂起,CPU去处理其他线程
+```
+
+
+
+```golang
+runtime.NumCPU() 获取当前计算机cpu核数
+runtime.GOMAXPROCS(int) P最大个数
+// P个数默认是NumCPU 如果设置了GOMMAXPROCS数量就是这个
+```
+<br>
+
+### G分配给P的规则
+
+|三种队列|解释
+|---|---
+|P 的本地队列（runq）	|每个 P 私有，容量约 256
+全局队列（sched.runq）	|所有 P 共享，当本地队列满时溢出到这里
+netpoller 就绪队列	|I/O 完成被唤醒的 G，先到这里再进队列
+
+```
+P 本地队列有 G?     → 有就直接跑
+        ↓ 没有
+查全局队列?         → 有就拿一批（一次拿多个）
+        ↓ 没有
+从其他 P 偷任务?    → 偷别的 P 本地队列的"后半部分"
+        ↓ 没有
+从 netpoller 找就绪 G?
+        ↓ 还没有
+进入自旋（spinning）等待，或休眠
+```
+
+---
+
+</details>
+
+
+<br>
+<details>
+<summary><strong>管道</strong></summary> 
+
+---
+
+`v,ok := <-chanIns`
+
+|状态	|v|	ok
+|---|---|---
+|有数据（无论是否已关闭）|	真实值	true
+|无数据 + 未关闭|	——	|阻塞等待
+|无数据 + 已关闭	|零值	|false
+
+<br>
+
+```golang
+for val:= range chanIns {
+    // 退出条件：ok == false
+}
+```
+
+---
+
+</details>
+<br><br><br><br><br><br><br><br>
+
+
+
+<a id="reflect"></a>
+
+## 反射
+
+```golang
+x := Person{name:"jack",age:10}
+
+// 获取类型信息
+t := reflect.TypeOf(x)    // t是一个reflect.Type 它描述Person
+
+// 类型名称 "Person"
+t.Name() 
+
+// 返回底层类型 reflect.Struct 
+// reflect.kind:  reflect.Struct  reflect.Int64  reflect.String...     
+t.Kind() 
+
+// 获取值信息
+v := reflect.ValueOf(x.age) 
+val := v.Int()拿到原始值
+
+```
+
+<br>
+
+### reflect.TypeOf(...).Kind() 底层类型种类
+
+```
+kind = reflect.TypeOf(...).Kind()
+switch kind {
+    case reflect.Int:
+        ...
+    case reflect.String:
+        ...
+}
+```
+
+<br><br><br><br><br><br><br><br>
+
+
+<a id="file"></a>
+
+## 文件操作
+
+
+|方法|作用
+|---|---
+|`os.Mkdir(path, 权限)`|创建文件夹
+|`os.MkdirAll(path,权限)`|创建多级目录
+|`FilePtr,err := OpenFile(path,打开模式,权限)`|权限参数只有os.O_CREATE时要写
+|`file.Close()`|关闭文件流
+|`io.EOF`|文件末尾
+
+|打开模式|含义
+|---|---
+|os.O_APPEND|追加
+|os.O_RDWR|读写
+|os.O_RDONLY|只读
+|os.O_WRONLY|只写
+|os.O_CREATE|创建文件
+|os.O_TRUNC|清空
+||
+e.g.
+
+```
+os.OpenFile(path,os.O_CREATE|os.O_WRONLY,0666)
+创建文件并只写，0666是权限
+```
+
+### 二次封装
+|方法|作用
+|--|--
+|`FilePtr,err:=os.Open(path)`|返回文件指针,默认WRONLY
+||
+
+<br>
+
+
+
+
+
+<details>
+<summary><strong>使用文件指针读写</strong></summary>
+
+---
+
+|方法|作用
+|--|--
+|`n,err:=FilePtr.Read([]byte)`|n为读取到的字节数<br>每次最多读[ ]byte长度这么多字节
+|`n,err:=FilePtr.Write([]byte) `|写文件 n为写入字节数
+||
+
+
+
+>[!NOTE]Read()
+>传入一个缓冲区域buf,必须是[ ]byte类型<br>
+>把buf读满了就不读了<br>
+>无数据可读时err==io.EOF
+
+---
+
+</details>
+
+
+<details>
+<summary><strong>bufio</strong></summary>
+
+---
+
+|方法|作用
+|--|--
+|`NewReader()`|创建Reader
+|`ReadString(分隔符)`|返回string,读到分隔符或EOF为止
+|`NewWriter()`|   创建Writer
+|`WriteString(string)`|写入,返回int写入字节数和err
+<br>
+
+```golang
+FilePtr,err := os.Open(...)
+defer FilePter.Close()
+
+// 1. 读
+reader := bufio.NewReader(FilePtr)
+// 传入分隔符,这里是按行读取,返回string类型
+str,err := reader.ReadString('\n')
+
+// 2.写
+writer := bufio.NewWriter(FilePtr)
+// 写入缓存
+writer.WriteString(string)  
+// 刷新缓存写入文件
+writer.Flush() 
+```
+---
+
+</details>
+
+<br><br>
+
+
+
+
+
+>[!IMPORTANT]循环读取边界条件
+><strong>Read</strong><br>
+>最后一次读取不会返回err,因为即使最后一次读不满len([]byte)也不会读超，下一次读才返回err<br>
+><strong>Reader</strong><br>
+>通常最后一次读取会返回err,因为没遇到分隔符就先读到EOF
+
+
+
+</details>
+<br>
+
+
+
+
+
+
+
+
+
+
+
+

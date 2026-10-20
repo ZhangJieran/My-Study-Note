@@ -345,7 +345,7 @@ border-box  ：width=content+padding+border<br>
 
 <strong>弹性盒子模型</strong>
 
-``` 
+``` css
 在大盒子里嵌套小盒子
 <div class="container">
     <div class="box1"> </div>
@@ -354,12 +354,32 @@ border-box  ：width=content+padding+border<br>
 </div>
 ```
 
-```
+```css
+// 一维布局
 .container {
     display          : flex;                        设置为弹性盒子
-    flex-direction   : row/column;                  设置主轴线为水平/垂直 (默认row)
-    justify-content  : flex-start/flex-end/center;  弹性容器的主轴线水平位置
-    align-items      : flex-start/flex-end/center;  弹性容器的主轴线垂直位置 
+    flex-direction   : row/column;                  主轴方向
+    justify-content  : flex-start/flex-end/center;  主轴线位置
+    align-items      : flex-start/flex-end/center;  交叉轴
+} 
+// row是从左往右边，colummn是从上到下
+
+// 二维布局
+{
+    display : grid;
+    
+    // 定义列
+    grid-template-columns:repeat(3,1fr);  三列，每份占一等分
+    grid-template-columns:100px 200px 1fr 第一列100px 第二列200px 第三列占剩下的
+
+    // 定义行
+    grid-template-rows:...
+
+    gap:16px;
+}
+
+子元素属性 {
+    grid-column:span 2; 当前元素占两行
 }
 
 .box1 {
