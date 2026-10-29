@@ -203,6 +203,7 @@ Host *
 |`systemctl status xxx.service`  |查看某个units的状态
 |`systemctl stop xxx.service`|  停止服务
 |`systemctl enable xxx.service`|开机自启动
+|`systemctl disable xxx.service`|关闭开机自启动
 |`systemctl list-units`| 列出当前系统里的units
 |`systemctl list-unit-files`| 列出所有units文件
 |`systemctl cat xxx`| 查看xxx units文件内容以及文件路径

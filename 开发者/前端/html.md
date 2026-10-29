@@ -21,7 +21,7 @@
 action 服务器地址 
 name   表单名称
 method 提交数据的方式  get提交url看得到，post看不到        
-
+enctype="multipart/form-data"  上传文件
 
 表单按钮<button type="submit"> <input type="submit">
         <button type="reset"> <input type="reset">

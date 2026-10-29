@@ -130,7 +130,7 @@ init_chat_model(
 父类                             BaseMessage
                                       |
                                       V
-子类  SystemMessage  HumanMessage  AIMessage  ToolMessage  MessagesPlacehoder
+子类  SystemMessage  HumanMessage  AIMessage  ToolMessage  MessagesPlaceholder
 
 ```
 ========================================================================<br>
@@ -324,14 +324,14 @@ config={
     "run_name"  : "str"                         LangSmith中这次运行会显示为指定名称
     "tags"      : "list[str]"                   LangSmith筛选trace。给执行链路打上标签，区分不同的运行任务
     "callbacks" : "list[BaseCallbackHandler]"   设置回调处理器，在运行不同阶段触发，与LangSmith进行追踪调试
-    metadata    : "Dict[str,Any]"               配置用户指定的信息，整个流程被包装为Runnable链时,可将这些参数传递给后续的链节点使用
-    max_concurrency : int                       限制当前可运行对象的最大并发运行数(针对batch)
-    recursion_limit : int                       运行时最大递归调用深度
-    configurable    ：Dict[str,Any]             可配置的参数和init_chat_model一样，覆盖/添加模型参数   
+    "metadata"  : "Dict[str,Any]"               配置用户指定的信息，整个流程被包装为Runnable链时,可将这些参数传递给后续的链节点使用
+    "max_concurrency" : int                       限制当前可运行对象的最大并发运行数(针对batch)
+    "recursion_limit" : int                       运行时最大递归调用深度
+    "configurable"    ：Dict[str,Any]             可配置的参数和init_chat_model一样，覆盖/添加模型参数   
 }
-
 ```
-configurable 里设置的参数须在 init_chat_model 的 configurable_fields 参数里有才会生效
+configurable 里设置的参数须在 init_chat_model 的 configurable_fields 参数里有才会生效<br>
+`configurable["thread_id"] = str`这个被checkpoint占用
 </div>
 <br>
 <div id="MoreArgs">
